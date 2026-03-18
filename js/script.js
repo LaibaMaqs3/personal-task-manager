@@ -1,5 +1,48 @@
 console.log("Task Manager Dashboard loaded successfully.");
 
+// Toast Notification System
+class Toast {
+  static show(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    // Icon mapping
+    const icons = {
+      success: '✓',
+      error: '✕',
+      info: 'ℹ'
+    };
+
+    toast.innerHTML = `
+      <span class="toast-icon">${icons[type]}</span>
+      <span class="toast-message">${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Remove toast after duration
+    setTimeout(() => {
+      toast.style.animation = 'slideIn 0.3s ease-out reverse';
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+    }, duration);
+  }
+
+  static success(message) {
+    this.show(message, 'success', 3000);
+  }
+
+  static error(message) {
+    this.show(message, 'error', 3000);
+  }
+
+  static info(message) {
+    this.show(message, 'info', 3000);
+  }
+}
+
 // Task Manager Application
 
 class TaskManager {
@@ -8,14 +51,17 @@ class TaskManager {
     this.currentFilter = 'all';
     this.searchTerm = '';
     this.currentSort = 'created-desc';
+    this.darkMode = false;
     this.init();
   }
 
   init() {
     this.loadTasks();
+    this.loadTheme();
     this.setupEventListeners();
     this.fetchQuote();
     this.render();
+    this.setupScrollToTop();
   }
 
 
@@ -43,6 +89,50 @@ class TaskManager {
     localStorage.setItem('tasks', JSON.stringify(this.tasks));
     this.updateStats();
     this.render();
+  }
+
+  // Theme Management
+  loadTheme() {
+    const savedTheme = localStorage.getItem('darkMode');
+    this.darkMode = savedTheme === 'true';
+    this.applyTheme();
+  }
+
+  toggleTheme() {
+    this.darkMode = !this.darkMode;
+    this.applyTheme();
+    localStorage.setItem('darkMode', this.darkMode);
+  }
+
+  applyTheme() {
+    const body = document.body;
+    if (this.darkMode) {
+      body.classList.add('dark-mode');
+    } else {
+      body.classList.remove('dark-mode');
+    }
+  }
+
+  // Scroll to Top Functionality
+  setupScrollToTop() {
+    const scrollBtn = document.getElementById('scroll-to-top');
+
+    // Show/hide scroll button based on scroll position
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 300) {
+        scrollBtn.classList.add('show');
+      } else {
+        scrollBtn.classList.remove('show');
+      }
+    });
+
+    // Scroll to top when clicked
+    scrollBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
   }
 
   // Event Listeners Setup
@@ -74,6 +164,11 @@ class TaskManager {
       this.currentSort = e.target.value;
       this.render();
     });
+
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      this.toggleTheme();
+    });
   }
 
   // Task Management Methods
@@ -101,12 +196,15 @@ class TaskManager {
     this.tasks.push(task);
     this.saveTasks();
     this.clearForm();
+    Toast.success(`Task "${task.title}" created successfully!`);
   }
 
   deleteTask(id) {
+    const task = this.tasks.find((t) => t.id === id);
     if (confirm('Are you sure you want to delete this task?')) {
       this.tasks = this.tasks.filter((task) => task.id !== id);
       this.saveTasks();
+      Toast.success(`Task deleted successfully!`);
     }
   }
 
@@ -114,7 +212,9 @@ class TaskManager {
     const task = this.tasks.find((t) => t.id === id);
     if (task) {
       task.status = task.status === 'completed' ? 'pending' : 'completed';
+      const statusMessage = task.status === 'completed' ? 'marked as completed' : 'marked as pending';
       this.saveTasks();
+      Toast.success(`Task "${task.title}" ${statusMessage}!`);
     }
   }
 
@@ -126,9 +226,11 @@ class TaskManager {
       document.getElementById('task-priority').value = task.priority;
       document.getElementById('task-due-date').value = task.dueDate;
 
-      this.deleteTask(id);
+      this.tasks = this.tasks.filter((t) => t.id !== id);
+      this.render();
       document.getElementById('task-form').scrollIntoView({ behavior: 'smooth' });
       document.getElementById('task-title').focus();
+      Toast.info(`Editing "${task.title}" - make your changes and save`);
     }
   }
 

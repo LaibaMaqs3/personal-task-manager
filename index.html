@@ -7,9 +7,18 @@
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
   <header>
     <h1>Personal Task Manager Dashboard</h1>
     <p class="subtitle">Stay organized and productive</p>
+    <div class="theme-toggle">
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark mode">
+        <span class="theme-icon sun">☀️</span>
+        <span class="theme-icon moon">🌙</span>
+      </button>
+    </div>
   </header>
 
   <main>
@@ -123,6 +132,11 @@
       </div>
     </section>
   </main>
+
+  <!-- Scroll to Top Button -->
+  <button id="scroll-to-top" class="scroll-to-top-btn" aria-label="Scroll to top">
+    ↑
+  </button>
 
   <script src="./js/script.js"></script>
 </body>
